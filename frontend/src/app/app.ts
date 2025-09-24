@@ -19,7 +19,7 @@ export class App implements OnDestroy, AfterViewInit {
   title = 'THE COOKBOOK';
 
   ingredientsText = 'eggs, tomatoes, spinach, feta';
-  extrasText = 'vegetarian, 20 minutes, one pan';
+  extrasText = '20 minutes, one pan'; // Removed 'vegetarian' from default
 
   loading = false;
   isDark = false;
@@ -282,6 +282,21 @@ export class App implements OnDestroy, AfterViewInit {
     this.typeTimer = window.setInterval(step, 10) as any; // Reduced from 20ms to 10ms
   }
 
+  async generate() {
+    const ing = String(this.ingredientsText)
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (!ing.length) {
+      this.startTyping('Please enter at least one ingredient.');
+      return;
+    }
+
+    // Generate with NO constraints at all - completely open recipes
+    await this.generateWithConstraints(ing, '', false); // Add flag to skip extrasText
+  }
+
   // Add method for dietary option generation
   async generateWithDiet(dietType: string) {
     const ing = String(this.ingredientsText)
@@ -294,26 +309,11 @@ export class App implements OnDestroy, AfterViewInit {
       return;
     }
 
-    // Set the dietary requirement as extras
-    this.extrasText = dietType;
-    
-    // Call the regular generate method
-    await this.generate();
+    // Use dietary constraint and include general extras
+    await this.generateWithConstraints(ing, dietType, true); // Include extrasText for dietary recipes
   }
 
-  async generate() {
-    const ing = String(this.ingredientsText)
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    const extras = this.extrasText;
-
-    if (!ing.length) {
-      this.startTyping('Please enter at least one ingredient.');
-      return;
-    }
-
+  private async generateWithConstraints(ingredients: string[], dietaryConstraint: string, useExtras: boolean = true) {
     try {
       this.loading = true;
       this.recipes = []; // Clear previous recipes
@@ -323,9 +323,9 @@ export class App implements OnDestroy, AfterViewInit {
 
       // Generate three different recipes with different effort levels
       const recipePromises = [
-        this.generateSingleRecipe(ing, extras, 'quick'),
-        this.generateSingleRecipe(ing, extras, 'medium'),
-        this.generateSingleRecipe(ing, extras, 'gourmet')
+        this.generateSingleRecipe(ingredients, dietaryConstraint, 'quick', useExtras),
+        this.generateSingleRecipe(ingredients, dietaryConstraint, 'medium', useExtras),
+        this.generateSingleRecipe(ingredients, dietaryConstraint, 'gourmet', useExtras)
       ];
 
       const results = await Promise.all(recipePromises);
@@ -344,7 +344,7 @@ export class App implements OnDestroy, AfterViewInit {
     }
   }
 
-  private async generateSingleRecipe(ingredients: string[], extras: string, effort: 'quick' | 'medium' | 'gourmet'): Promise<Recipe> {
+  private async generateSingleRecipe(ingredients: string[], dietaryConstraint: string, effort: 'quick' | 'medium' | 'gourmet', useExtras: boolean = true): Promise<Recipe> {
     let effortPrompt = '';
     let title = '';
     
@@ -363,7 +363,18 @@ export class App implements OnDestroy, AfterViewInit {
         break;
     }
 
-    const fullExtras = `${extras ? extras + ', ' : ''}${effortPrompt}`;
+    // Build the full constraint string
+    let fullExtras = effortPrompt;
+    
+    // Add general extras (like timing, equipment) only if useExtras is true
+    if (useExtras && this.extrasText.trim()) {
+      fullExtras = `${this.extrasText.trim()}, ${fullExtras}`;
+    }
+    
+    // Add dietary constraint only if specified
+    if (dietaryConstraint.trim()) {
+      fullExtras = `${dietaryConstraint.trim()}, ${fullExtras}`;
+    }
     
     try {
       const res = await fetch('/api/recipe', {
