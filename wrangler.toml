@@ -1,0 +1,21 @@
+name = "cf_ai_recipe_generator"
+main = "src/worker.ts"
+compatibility_date = "2025-09-01"
+
+[ai]
+binding = "AI"
+
+[observability]
+enabled = true
+
+[durable_objects]
+bindings = [
+  { name = "SESSION_DO", class_name = "SessionDO" }
+]
+
+[assets]
+directory = "frontend/dist/frontend/browser"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["SessionDO"]

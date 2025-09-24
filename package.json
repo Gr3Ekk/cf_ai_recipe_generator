@@ -1,0 +1,16 @@
+{
+  "name": "cf_ai_recipe_generator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "deploy": "npm --prefix frontend run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250909.0",
+    "typescript": "^5.6.2",
+    "wrangler": "^4.38.0"
+  }
+}

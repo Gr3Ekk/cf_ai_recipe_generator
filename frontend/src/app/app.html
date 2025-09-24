@@ -1,0 +1,99 @@
+<main class="layout" [class.dark]="isDark">
+  <section class="panel input-panel">
+    <header class="brand">
+      <h1 class="title">THE COOKBOOK</h1>
+      <p class="subtitle">Turn your ingredients into a complete recipe.</p>
+    </header>
+
+    <div class="field">
+      <label for="ingredients">Ingredients</label>
+      <textarea id="ingredients" [(ngModel)]="ingredientsText" rows="6" placeholder="eggs, tomatoes, spinach, feta" (keydown.enter)="generate()"></textarea>
+      <small class="hint">Separate ingredients with commas.</small>
+    </div>
+
+    <div class="dietary-options">
+      <div class="diet-buttons">
+        <!-- Top row -->
+        <button type="button" class="primary" (click)="generate()" [disabled]="loading">
+          {{ loading ? 'Generating…' : 'Generate Recipes' }}
+        </button>
+        <button type="button" class="diet-btn glutenfree" (click)="generateWithDiet('gluten-free')" [disabled]="loading">
+          Gluten Free
+        </button>
+        
+        <!-- Second row -->
+        <button type="button" class="diet-btn vegan" (click)="generateWithDiet('vegan')" [disabled]="loading">
+          Generate Vegan
+        </button>
+        <button type="button" class="diet-btn keto" (click)="generateWithDiet('keto, low-carb')" [disabled]="loading">
+          Generate Keto
+        </button>
+        
+        <!-- Third row -->
+        <button type="button" class="diet-btn protein" (click)="generateWithDiet('high-protein')" [disabled]="loading">
+          High Protein
+        </button>
+        <button type="button" class="diet-btn lowcarb" (click)="generateWithDiet('low-carb')" [disabled]="loading">
+          Low Carb
+        </button>
+      </div>
+    </div>
+
+    <p class="footnote">Powered by Llama 3.3 70B Fast on Cloudflare.</p>
+  </section>
+
+  <section class="panel output-panel">
+    <!-- Recipe navigation header -->
+    <div class="recipe-header" *ngIf="recipes.length > 0">
+      <div class="recipe-nav">
+        <button 
+          type="button" 
+          class="nav-arrow left" 
+          [disabled]="!canNavigateLeft"
+          (click)="navigateLeft()"
+          aria-label="Previous recipe">
+          ←
+        </button>
+        
+        <div class="recipe-info">
+          <h2 class="recipe-title">{{ currentRecipe?.title }}</h2>
+          <div class="recipe-counter">{{ currentRecipeIndex + 1 }} of {{ recipes.length }}</div>
+        </div>
+        
+        <button 
+          type="button" 
+          class="nav-arrow right" 
+          [disabled]="!canNavigateRight"
+          (click)="navigateRight()"
+          aria-label="Next recipe">
+          →
+        </button>
+      </div>
+    </div>
+
+    <div class="output-card" #outCard aria-live="polite" [attr.aria-busy]="loading">
+      <!-- Loading animation -->
+      <div class="loading-container" *ngIf="loading">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <div class="loading-text">Generating your recipes...</div>
+          <div class="loading-subtext">Creating 3 different difficulty levels</div>
+        </div>
+      </div>
+
+      <!-- Recipe content -->
+      <div class="output-content" [innerHTML]="typedHtml" *ngIf="!loading"></div>
+      <div class="placeholder" *ngIf="!typedHtml && !loading">Your recipes will appear here…</div>
+    </div>
+  </section>
+</main>
+
+<!-- Bottom-of-page theme switch -->
+<div class="theme-toggle" aria-label="Toggle dark mode">
+  <label class="switch" title="Toggle dark mode">
+    <input type="checkbox" [checked]="isDark" (change)="toggleTheme()" aria-label="Dark mode switch" />
+    <span class="slider"></span>
+  </label>
+</div>
+
+
